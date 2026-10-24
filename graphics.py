@@ -30,22 +30,7 @@ def compute_bounding_box(instructions):
     ys = [p[1] for p in points]
     return min(xs), max(xs), min(ys), max(ys)
 
-def update_progress_bar(current_f, total_f, gen_idx, total_gens, bar_length=25):
-    """Affiche une barre de progression ASCII."""
-    fraction = current_f / total_f if total_f > 0 else 1.0
-    percent = fraction * 100.0
-    
-    filled = int(bar_length * fraction)
-    bar = '#' * filled + '*' * (bar_length - filled)
-    
-    sys.stdout.write(f"\r[Gen {gen_idx + 1}/{total_gens}] [{bar}] {percent:5.1f}%")
-    sys.stdout.flush()
-
-def render(generations, filename="plant.gif"):
-    # Render bar parameters
-    total_gens = len(generations)
-    total_f = sum([gen.count('F') for gen in generations])
-    
+def render(generations, filename):
     width, height = 800, 800
     margin = 50
     
@@ -74,8 +59,6 @@ def render(generations, filename="plant.gif"):
         frame_interval = max(1, f_count // 50) # 1 / frame_interval des frames sont dessinées
         
         f_drawn = 0
-
-        update_progress_bar(0, total_f, gen_idx, total_gens)
         
         for cmd in gen_instructions:
             if cmd == 'F':
@@ -93,7 +76,6 @@ def render(generations, filename="plant.gif"):
                 if f_drawn % frame_interval == 0:
                     frames.append(img.copy())
                     durations.append(20)
-                    update_progress_bar(f_drawn, total_f, gen_idx, total_gens)
                     
             elif cmd == '+':
                 angle += ANGLE_STEP
@@ -107,11 +89,7 @@ def render(generations, filename="plant.gif"):
 
         frames.append(img.copy())
         # Pause : 1200 ms entre les générations, 2500 ms sur la forme finale
-        durations.append(2500 if gen_idx == total_gens - 1 else 1200)
-        
-    update_progress_bar(total_f, total_f, gen_idx, total_gens)
-    sys.stdout.write(" [DONE]\n")
-    sys.stdout.flush()
+        durations.append(2500 if gen_idx == len(generations) - 1 else 1200)
 
     print(f"\nGénération du GIF...")        
     frames[0].save(
@@ -124,6 +102,11 @@ def render(generations, filename="plant.gif"):
     print(f"GIF enregistré : {filename}")
 
 if __name__ == "__main__":
+    if len(sys.argv) > 2:
+        filename = sys.argv[1]
+    else:
+        filename = "plant.gif"
+
     if len(sys.argv) > 1:
         with open(sys.argv[1], "r", encoding="utf-8") as f:
             raw_text = f.read()
@@ -136,4 +119,4 @@ if __name__ == "__main__":
         if cleaned != "":
             generations.append(cleaned)
 
-    render(generations)
+    render(generations, filename=filename)
