@@ -1,0 +1,3 @@
+angle: 90
+seed: -F
+F -> F+F-F-F+F

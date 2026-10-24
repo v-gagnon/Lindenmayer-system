@@ -17,17 +17,21 @@ parseRule line = case words line of
   [[c], "->", target] -> Just (c, target)
   _                   -> Nothing
 
--- Parse le fichier pour en extraire la seed et la liste de règles
-parseFile :: String -> (String, RuleTable)
-parseFile content = (seed, rules)
+-- Parse le fichier pour en extraire la seed, la liste de règles et l'angle des virages
+parseFile :: String -> (String, String, RuleTable)
+parseFile content = (angle, seed, rules)
   where
     ls = cleanLines content
     
     seed = case filter ("seed:" `isPrefixOf`) ls of
       (s:_) -> dropWhile (== ' ') (drop 5 s)
-      []    -> error "Erreur : aucune ligne 'seed:' trouvée dans le fichier."
+      []    -> error "Erreur : aucune ligne 'seed:' trouvée."
+      
+    angle = case filter ("angle:" `isPrefixOf`) ls of
+      (a:_) -> dropWhile (== ' ') (drop 6 a)
+      []    -> "90.0"
     
-    ruleLines = filter (not . ("seed:" `isPrefixOf`)) ls
+    ruleLines = filter (\l -> not ("seed:" `isPrefixOf` l) && not ("angle:" `isPrefixOf` l)) ls
     rules     = [r | Just r <- map parseRule ruleLines]
 
 -- Applique une génération d'expansion déterministe
@@ -45,7 +49,9 @@ main = do
         []          -> ("rules/barnsley_fern.txt", 5)
 
   content <- readFile filepath
-  let (seed, rules) = parseFile content
+  let (angle, seed, rules) = parseFile content
+
+  putStrLn angle
 
   let generations = take (n + 1) (iterate (step rules) seed)
   mapM_ putStrLn generations

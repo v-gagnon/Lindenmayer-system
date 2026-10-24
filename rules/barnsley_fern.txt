@@ -1,3 +1,4 @@
+angle: 25
 seed: -X
 F -> FF
 X -> F+[[X]-X]-F[-FX]+X

@@ -2,10 +2,7 @@ import sys
 import math
 from PIL import Image, ImageDraw
 
-ANGLE_STEP = 25
-
-def compute_bounding_box(instructions):
-    """Calcule la taille du cadre."""
+def compute_bounding_box(instructions, angle_step):
     x, y, angle = 0.0, 0.0, -90.0
     stack = []
     points = [(x, y)]
@@ -17,9 +14,9 @@ def compute_bounding_box(instructions):
             y += math.sin(rad)
             points.append((x, y))
         elif cmd == '+':
-            angle += ANGLE_STEP
+            angle -= angle_step
         elif cmd == '-':
-            angle -= ANGLE_STEP
+            angle += angle_step
         elif cmd == '[':
             stack.append((x, y, angle))
         elif cmd == ']':
@@ -30,12 +27,12 @@ def compute_bounding_box(instructions):
     ys = [p[1] for p in points]
     return min(xs), max(xs), min(ys), max(ys)
 
-def render(generations, filename):
+def render(angle_step, generations, filename):
     width, height = 800, 800
     margin = 50
     
     last_gen = generations[-1]
-    min_x, max_x, min_y, max_y = compute_bounding_box(last_gen)
+    min_x, max_x, min_y, max_y = compute_bounding_box(last_gen, angle_step)
     
     span_x = max(max_x - min_x, 1e-5)
     span_y = max(max_y - min_y, 1e-5)
@@ -56,7 +53,7 @@ def render(generations, filename):
         stack = []
         
         f_count = gen_instructions.count('F')
-        frame_interval = max(1, f_count // 50) # 1 / frame_interval des frames sont dessinées
+        frame_interval = max(1, f_count // 50) 
         
         f_drawn = 0
         
@@ -78,9 +75,9 @@ def render(generations, filename):
                     durations.append(20)
                     
             elif cmd == '+':
-                angle += ANGLE_STEP
+                angle -= angle_step
             elif cmd == '-':
-                angle -= ANGLE_STEP
+                angle += angle_step
             elif cmd == '[':
                 stack.append((x, y, angle))
             elif cmd == ']':
@@ -88,7 +85,6 @@ def render(generations, filename):
                     x, y, angle = stack.pop()
 
         frames.append(img.copy())
-        # Pause : 1200 ms entre les générations, 2500 ms sur la forme finale
         durations.append(2500 if gen_idx == len(generations) - 1 else 1200)
 
     print(f"\nGénération du GIF...")        
@@ -102,21 +98,13 @@ def render(generations, filename):
     print(f"GIF enregistré : {filename}")
 
 if __name__ == "__main__":
-    if len(sys.argv) > 2:
-        filename = sys.argv[1]
-    else:
-        filename = "plant.gif"
+    filename = sys.argv[1] if len(sys.argv) > 1 else "animation.gif"
+    filename = "animations/" + filename
 
-    if len(sys.argv) > 1:
-        with open(sys.argv[1], "r", encoding="utf-8") as f:
-            raw_text = f.read()
-    else:
-        raw_text = sys.stdin.read()
-
-    generations = []
-    for line in raw_text.splitlines():
-        cleaned = line.strip()
-        if cleaned != "":
-            generations.append(cleaned)
-
-    render(generations, filename=filename)
+    raw_text = sys.stdin.read()
+    lines = [line.strip() for line in raw_text.splitlines() if line.strip() != ""]
+    
+    if lines:
+        parsed_angle = float(lines[0])
+        generations = lines[1:]
+        render(parsed_angle, generations, filename=filename)

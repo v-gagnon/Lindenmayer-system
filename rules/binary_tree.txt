@@ -1,0 +1,4 @@
+angle: 45
+seed: X
+F -> FF
+X -> F[+X]-X

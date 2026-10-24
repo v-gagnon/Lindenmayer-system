@@ -1,0 +1,7 @@
+angle: 60
+seed: FA
+#F permet d'indiquer que A et B avancent
+A -> FB-FA-FB
+B -> FA+FB+FA
+#F devient une variable muette, X
+F -> X
